@@ -16,7 +16,7 @@ cd src/fates
 GITHASH2=`git log -n 1 --format=%h`
 
 ### no fire runs
-CASE=junk_pinus_pond200_02
+CASE=junk_FATES_SPR_TEST001
 
 SETUP_CASE=${CASE}_0.125x0.125
 
@@ -35,7 +35,11 @@ basedir=$SRCDIR/cime/scripts/
 cime_model=cesm
 MACH=cheyenne
 
+## compset to set up global case
 COMP=2000_DATM%GSWP3v1_CLM50%FATES_SICE_SOCN_RTM_SGLC_SWAV
+
+## resolution to set up global case 
+RES=ne120_t12
 
 ## project numbers
 PROJECT=UBOI0003
@@ -43,7 +47,7 @@ PROJECT=UBOI0003
 #### load_machine_files
 cd $basedir
 
-./create_newcase --case ${casedir}${CASE_NAME} --res ne120_t12 --compset ${COMP} --project ${PROJECT} --run-unsupported --mach ${MACH}
+./create_newcase --case ${casedir}${CASE_NAME} --res ${RES} --compset ${COMP} --project ${PROJECT} --run-unsupported --mach ${MACH}
 
 
 cd ${casedir}${CASE_NAME}
