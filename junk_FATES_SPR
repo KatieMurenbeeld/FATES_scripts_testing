@@ -56,7 +56,9 @@ export CLM_DOMAIN_DIR=/glade/work/katiem/sfcdata
 export CLM_SURFDAT_DIR=/glade/work/katiem/sfcdata
 
 export SITE_NAME=Idaho_BBEF
+# Would this be domain for single point run?
 export CLM_USRDAT_DOMAIN=domain.lnd.0.125x0.125_tx0.1v2.140704_BBEF.nc
+# Would this be surfdata for single point run?
 export CLM_USRDAT_SURDAT=surfdata_0.125x0.125_hist_16pfts_Irrig_CMIP6_simyr2005_c190613_BBEF.nc
 
 
@@ -74,3 +76,6 @@ export CLM_USRDAT_SURDAT=surfdata_0.125x0.125_hist_16pfts_Irrig_CMIP6_simyr2005_
 ./case.setup
 ./preview_namelists
 ##modify env_run
+
+
+qcmd -- ./case.build

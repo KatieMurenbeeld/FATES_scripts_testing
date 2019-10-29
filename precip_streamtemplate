@@ -1,0 +1,38 @@
+<streamstemplate>
+<stream>
+      <dataSource>
+         CLMNCEP
+      </dataSource>
+      <domainInfo>
+         <variableNames>
+            time    time
+            xc      lon
+            yc      lat
+            area    area
+            mask    mask
+         </variableNames>
+         <filePath>
+         $DIN_LOC_ROOT/atm/datm7/domain_wrf.clm
+         </filePath>
+         <fileNames>
+            domain.lnd.1x1pt_lapazMEX_navy.nc
+         </fileNames>
+      </domainInfo>
+      <fieldInfo>
+         <variableNames>
+            PRECTmms PREC
+         </variableNames>
+         <offset>
+            -5400
+         </offset>
+         <filePath>
+            $DIN_LOC_ROOT/atm/datm7/CLM1PT_data/1x1pt_lapazMEX
+         </filePath>
+         <fileNames>
+          WRF_1kmx1km_1988_01.nc
+          WRF_1kmx1km_1988_02.nc
+          WRF_1kmx1km_1988_03.nc
+         </fileNames>
+      </fieldInfo>
+</stream>
+</streamstemplate>

@@ -1,0 +1,26 @@
+> cd scripts
+
+# First make sure you have a inputdata location that you can write to
+# You only need to do this step once, so you won't need to do this in the future.
+
+> setenv MYCSMDATA $HOME/inputdata
+> ./link_dirtree $CSMDATA $MYCSMDATA
+
+# Next, create and move all your datasets into $MYCSMDATA with id $MYUSERDAT
+
+#Now create a single-point case
+> ./create_newcase -case my_atmforc_test -res pt1_pt1 -compset I1850CRUCLM45BGC \
+-mach yellowstone_intel
+> cd my_atmforc_test
+# Set the data root to your inputdata directory, and set CLM_USRDAT_NAME
+# to the user id you created for your datasets above
+> ./xmlchange DIN_LOC_ROOT_CSMDATA=$MYCSMDATA,CLM_USRDAT_NAME=$MYUSRDAT
+# Set the land-mask to USGS, so both clm and DATM can find files
+> ./xmlchange CLM_BLDNML_OPTS='-mask USGS'
+# Then set DATM_MODE to single-point mode so DATM will use your forcing datasets
+# Put your forcing datasets into $MYCSMDATA/atm/datm7/CLM1PT_data/$MYUSRDAT
+> ./xmlchange DATM_MODE=CLM1PT
+> ./cesm_setup
+# If the list of fields, or filenames, filepaths, or fieldnames are different
+# you'll need to edit the DATM namelist streams file to make it consistent
+> $EDITOR Buildconf/datm.buildnml.csh
