@@ -36,16 +36,15 @@ for m in month:
     # Calculate wind speed from the U and V components
     d['WIND'] = np.sqrt(d['U10']**2 + d['V10']**2)
 
-    # Get 3-hourly data for the desired variables
-    new_array = d[['T2','Q2','PSFC','SWNORM','GLW','PRCP','WIND']].resample(XTIME = '1H').mean(dim = 'XTIME') # create daily means of few variables
-	new_array = new_array.rename({'T2':'TBOT','Q2':'QBOT','PSFC':'PSRF','GLW':'FLDS'}) # rename to be consistent with CLM(FATES)
+    # Set coordinates for the new xarray dataset
+    d3_xlat = np.array(d['XLAT']) # Create a 3-D array from the XLAT
+    d2_xlat = d3_xlat[1,:,:] # Make new 2-D array for XLAT
+    d3_xlon = np.array(d['XLONG']) # Create a 3-D array from the XLON
+    d2_xlon = d3_xlon[1,:,:] # Make a new 2-D array for XLON
 
-	# Adjust the meta data
-	new_array['TBOT'].attrs = [('description','1-HOURLY MEAN GRID SCALE TEMPERATUTE'), ('units','K')]
-	new_array['QBOT'].attrs = [('description','1-HOURLY MEAN GRID SCALE SPECIFIC HUMIDITY'), ('units','kg/kg')]
-	new_array['PSRF'].attrs = [('description','1-HOURLY MEAN SURFACE PRESSURE'), ('units','Pa')]
-	new_array['FLDS'].attrs = [('description','1-HOURLY MEAN LONG WAVE FLUX AT GROUNF SURFACE'),('units','Wm^2')]
-	new_array['WIND'].attrs = [('description','1-HOURLY MAXIMUM GRID SCALE TEMPERATURE'), ('units','K')]
+    # Get 1-hourly data for the desired variables
+    new_array = d[['T2','Q2','PSFC','SWNORM','GLW','WIND']].resample(XTIME = '1H').mean(dim = 'XTIME') # create daily means of few variables
+	new_array = new_array.rename({'T2':'TBOT','Q2':'QBOT','PSFC':'PSRF','GLW':'FLDS'}) # rename to be consistent with CLM(FATES)
 
     # Create a new dataset
     ds = xr.Dataset({'TBOT':(['time','x','y'], new_array['TBOT']),
@@ -58,6 +57,12 @@ for m in month:
                 coords = {'lat': (['x','y'], d2_xlat),
                         'lon': (['x','y'], d2_xlon),
                         'time': np.array(d['XTIME'])})
+    # Adjust the meta data
+	ds['TBOT'].attrs = [('description','1-HOURLY MEAN GRID SCALE TEMPERATUTE'), ('units','K')]
+	ds['QBOT'].attrs = [('description','1-HOURLY MEAN GRID SCALE SPECIFIC HUMIDITY'), ('units','kg/kg')]
+	ds['PSRF'].attrs = [('description','1-HOURLY MEAN SURFACE PRESSURE'), ('units','Pa')]
+	ds['FLDS'].attrs = [('description','1-HOURLY MEAN LONG WAVE FLUX AT GROUNF SURFACE'),('units','Wm^2')]
+	ds['WIND'].attrs = [('description','1-HOURLY MAXIMUM GRID SCALE TEMPERATURE'), ('units','K')]
 
     # Write new netcdf file
     print("Writing output to disk")
