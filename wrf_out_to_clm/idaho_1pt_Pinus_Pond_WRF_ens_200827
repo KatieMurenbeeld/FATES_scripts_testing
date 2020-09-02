@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+
+## When using WRF forcing data:
+## copy over user_datm.streams.txt. (Precip, Solar, TPQW) to case dir
+## confirm paths in two locations in user_datm.streams.txt
+## and then submit
+
+
+SRCDIR=/glade/work/katiem/git/ctsm
+cd ${SRCDIR}
+### CTSM git version 
+GITHASH1=`git log -n 1 --format=%h`
+
+cd src/fates
+### FATES git version
+GITHASH2=`git log -n 1 --format=%h`
+
+### no fire run
+CASE=ID_WRF_100yr_ensparamtest_053
+
+SETUP_CASE=${CASE}_1pt
+
+#PARAM_FILE=param_file_Pinus_Pond_200327_allomparam_v18_d2agbw_2par_lasaint.nc
+PARAM_FILE=params_wrftest_c200827v02.pondo.ens.8.v02.nc
+
+##PARAM_DIR=${SRCDIR}/src/fates/parameter_files/
+PARAM_DIR=/glade/work/katiem/FATES_data/parameter_files/WRF_FATES_params/
+
+CASE_NAME=${SETUP_CASE}_${GITHASH1}_${GITHASH2}
+
+casedir=/glade/work/katiem/FATES_cases/WRF/
+
+basedir=$SRCDIR/cime/scripts/
+
+cime_model=cesm
+MACH=cheyenne
+
+#COMP=2000_DATM%GSWP3v1_CLM50%FATES_SICE_SOCN_RTM_SGLC_SWAV
+COMP=I2000Clm50FatesGs
+
+## project numbers
+PROJECT=UBOI0003
+
+#### load_machine_files
+cd $basedir
+
+./create_newcase --case ${casedir}${CASE_NAME} --res CLM_USRDAT --compset ${COMP} --project ${PROJECT} --run-unsupported --mach ${MACH}
+
+
+cd ${casedir}${CASE_NAME}
+
+#export CLM_DOMAIN_DIR=/glade/scratch/pbuotte/ID
+export CLM_DOMAIN_DIR=/glade/work/katiem/sfcdata
+#export CLM_SURFDAT_DIR=/glade/scratch/pbuotte/ID
+export CLM_SURFDAT_DIR=/glade/work/katiem/sfcdata
+
+export SITE_NAME=Idaho_1pt
+export CLM_USRDAT_DOMAIN=domain.lnd.ID_KM_singlept_c191104.nc
+export CLM_USRDAT_SURDAT=surfdat_ID_KM_singlept_191104.nc
+# Below is another surfdat file with zbedrock=1.0m. The surfdat file 191104 zbedrock=2.2m.
+#export CLM_USRDAT_SURDAT=surfdat_ID_KM_singlept_200511.nc
+
+
+##modify env_mach_pes file
+./xmlchange NTASKS_ATM=1
+./xmlchange NTASKS_CPL=1
+./xmlchange NTASKS_GLC=1
+./xmlchange NTASKS_OCN=1
+./xmlchange NTASKS_WAV=1
+./xmlchange NTASKS_ICE=1
+./xmlchange NTASKS_LND=1
+./xmlchange NTASKS_ROF=1
+./xmlchange ROOTPE_ATM=0
+./xmlchange ROOTPE_CPL=1
+./xmlchange ROOTPE_GLC=1
+./xmlchange ROOTPE_OCN=1
+./xmlchange ROOTPE_WAV=1
+./xmlchange ROOTPE_ICE=1
+./xmlchange ROOTPE_LND=1
+./xmlchange ROOTPE_ROF=1
+./xmlchange ROOTPE_ESP=1
+./xmlchange NTHRDS_ATM=1
+./xmlchange NTHRDS_CPL=1
+./xmlchange NTHRDS_GLC=1
+./xmlchange NTHRDS_OCN=1
+./xmlchange NTHRDS_WAV=1
+./xmlchange NTHRDS_ICE=1
+./xmlchange NTHRDS_LND=1
+./xmlchange NTHRDS_ROF=1
+./xmlchange NTHRDS_ESP=1
+
+./case.setup
+
+##modify env_run
+./xmlchange STOP_OPTION=nyears
+./xmlchange STOP_N=1
+./xmlchange REST_OPTION=nyears
+./xmlchange RESUBMIT=100
+./xmlchange CLM_FORCE_COLDSTART=on
+
+./xmlchange JOB_WALLCLOCK_TIME=8:00
+./xmlchange JOB_QUEUE=regular
+
+##./xmlchange CONTINUE_RUN=TRUE
+##./xmlchange DEBUG=FALSE
+
+./xmlchange RUN_STARTDATE='1988-01-01'
+
+./xmlchange DATM_MODE=CLMGSWP3v1
+./xmlchange DATM_CLMNCEP_YR_ALIGN=1988
+./xmlchange DATM_CLMNCEP_YR_START=1988
+./xmlchange DATM_CLMNCEP_YR_END=2015
+
+./xmlchange MOSART_MODE=NULL
+./xmlchange ATM_DOMAIN_FILE=${CLM_USRDAT_DOMAIN}
+./xmlchange ATM_DOMAIN_PATH=${CLM_DOMAIN_DIR}
+./xmlchange LND_DOMAIN_FILE=${CLM_USRDAT_DOMAIN}
+./xmlchange LND_DOMAIN_PATH=${CLM_DOMAIN_DIR}
+./xmlchange CLM_USRDAT_NAME=${SITE_NAME}
+./xmlchange CALENDAR=GREGORIAN
+
+cat > user_nl_clm <<EOF
+
+fsurdat = '${CLM_SURFDAT_DIR}/${CLM_USRDAT_SURDAT}'
+fates_paramfile = '${PARAM_DIR}/${PARAM_FILE}'
+hist_fincl1 =
+'M1_SCPF','M2_SCPF','M3_SCPF','M4_SCPF','M5_SCPF','M6_SCPF','MORTALITY_CANOPY_SCPF','MORTALITY_UNDERSTORY_SCPF','Fire_Closs','PATCH_AREA_BY_AGE','CANOPY_AREA_BY_AGE','BIOMASS_BY_AGE',\
+'PFTcrownarea','DDBH_CANOPY_SCPF','DDBH_UNDERSTORY_SCPF','NPLANT_CANOPY_SCPF','NPLANT_UNDERSTORY_SCPF','BSTOR_CANOPY_SCPF','BSTOR_UNDERSTORY_SCPF','CWD_AG_CWDSC',\
+'NPLANT_SCAG','NPLANT_SCPF','DDBH_SCPF','BA_SCPF','RECRUITMENT'
+hist_mfilt  = 12
+
+fates_parteh_mode=1
+use_fates=.true.
+use_fates_spitfire=.false. 
+EOF
+
+#fates_inventory_ctrl_filename = 'path to inventory file'
+
+#--------Copy user_datm.streams files--------
+cp /glade/work/katiem/FATES_data/ID/singlept/WRF/user_*.* .
+
+qcmd -- ./case.build
+./case.submit
